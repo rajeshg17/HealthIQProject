@@ -2,6 +2,8 @@ package com.healthiq.takehome;
 
 import java.io.FileNotFoundException;
 
+// TODO replace System.out.println with log4j
+
 public class BloodSugarSimulator {
 	
 	private DaoService daoService = new DaoService();
@@ -12,12 +14,8 @@ public class BloodSugarSimulator {
 	
 
 	public static void main(String[] args) throws FileNotFoundException {
-		System.out.println("Hello, World!");
-		
 		BloodSugarSimulator bss = new BloodSugarSimulator();
-		
 		bss.loadData();
-		
 	}
 
 }

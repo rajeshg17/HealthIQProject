@@ -17,16 +17,20 @@ public abstract class AbstractFileDao<E extends Entity> implements FileDao<E> {
 	public void loadFile(String path) throws FileNotFoundException {
 		// TODO change this for BufferedFileReader
 		Scanner scanner = new Scanner(new File(path));
-
 		scanner.nextLine(); // header. ignore
+		
+		int i = 0; // excluding header
+		String entityName = null;
 		while (scanner.hasNextLine()) {
 			String data = scanner.nextLine();
 			if (data != null && !data.trim().equals("")) {
 				E e = populateEntity(data);
 				entities.put(e.getId(), e);
+				i++;
+				entityName = e.getClass().getSimpleName();
 			}
 		}
-		
+		System.out.println("loaded " + i + " entities(" + entityName + ")");
 		scanner.close();
 	}
 	
