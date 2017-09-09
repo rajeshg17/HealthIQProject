@@ -1,12 +1,22 @@
 package com.healthiq.takehome;
 
-public class BloodSugarSimulator {
+import java.io.FileNotFoundException;
 
-	public static void main(String[] args) {
+public class BloodSugarSimulator {
+	
+	private DaoService daoService = new DaoService();
+	
+	private void loadData() throws FileNotFoundException {
+		daoService.loadData();
+	}
+	
+
+	public static void main(String[] args) throws FileNotFoundException {
 		System.out.println("Hello, World!");
 		
-		System.out.println("Hello, World! Commit-2.");
-		System.out.println("Hello, World! Commit-3.");
+		BloodSugarSimulator bss = new BloodSugarSimulator();
+		
+		bss.loadData();
 		
 	}
 
