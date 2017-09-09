@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-import com.healthiq.takehome.bo.Entity;
+import com.healthiq.takehome.bo.ImpactEntity;
 
-public abstract class AbstractFileDao<E extends Entity> implements FileDao<E> {
+
+public abstract class AbstractFileDao<E extends ImpactEntity> implements FileDao<E> {
 	
 	Map<Integer, E> entities = new HashMap<Integer, E>();
 

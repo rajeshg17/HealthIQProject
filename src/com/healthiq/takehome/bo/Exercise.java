@@ -1,6 +1,6 @@
 package com.healthiq.takehome.bo;
 
-public class Exercise implements Entity {
+public class Exercise implements ImpactEntity {
 	
 	private Integer id;
 	private String name;

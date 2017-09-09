@@ -1,6 +1,6 @@
 package com.healthiq.takehome.bo;
 
-public interface Entity {
+public interface ImpactEntity {
 	
 	Integer getId();
 	

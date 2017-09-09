@@ -1,6 +1,6 @@
 package com.healthiq.takehome.bo;
 
-public class Food implements Entity {
+public class Food implements ImpactEntity {
 
 	private Integer id;
 	private String name;

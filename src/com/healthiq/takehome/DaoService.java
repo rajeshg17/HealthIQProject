@@ -13,10 +13,17 @@ public class DaoService {
 	private static final FoodDao foodDao = new FoodDaoImpl();
 	private static final ExerciseDao exerciseDao = new ExerciseDaoImpl();
 	
-	
 	public void loadData() throws FileNotFoundException {
 		foodDao.loadFile("data/food.dat");
 		exerciseDao.loadFile("data/exercise.dat");
 	}
 
+	public FoodDao getFoodDao() {
+		return foodDao;
+	}
+	
+	public ExerciseDao getExercisedao() {
+		return exerciseDao;
+	}
+	
 }
