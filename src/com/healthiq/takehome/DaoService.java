@@ -22,7 +22,7 @@ public class DaoService {
 		return foodDao;
 	}
 	
-	public ExerciseDao getExercisedao() {
+	public ExerciseDao getExerciseDao() {
 		return exerciseDao;
 	}
 	

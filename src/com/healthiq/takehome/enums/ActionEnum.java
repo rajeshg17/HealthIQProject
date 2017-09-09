@@ -5,12 +5,13 @@ import java.util.Map;
 
 public enum ActionEnum {
 
-	EAT ("E", 2),
-	EXERCISE ("X", 2),
+	EAT ("E", 120, 1),
+	EXERCISE ("X", 60, -1),
 	;
 	
 	private String code;
-	private int affectHours;
+	private int affectMin;
+	private int impact;
 	
 	private static Map<String, ActionEnum> map;
 	
@@ -20,17 +21,22 @@ public enum ActionEnum {
 			map.put(ae.code, ae);
 		}
 	}
-	private ActionEnum(String code, int hours) {
+	private ActionEnum(String code, int min, int impact) {
 		this.code = code;
-		this.affectHours = hours;
+		this.affectMin = min;
+		this.impact = impact;
 	}
 	
 	public String getCode() {
 		return code;
 	}
 	
-	public int getAffectHours() {
-		return affectHours;
+	public int getAffectMin() {
+		return affectMin;
+	}
+	
+	public int getImpact() {
+		return impact;
 	}
 	
 	public static ActionEnum getEnum(String code) {
