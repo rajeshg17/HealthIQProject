@@ -3,6 +3,11 @@ package com.healthiq.takehome.bo;
 import com.healthiq.takehome.enums.ActionEnum;
 import com.healthiq.takehome.utils.Utils;
 
+/*
+ * Representation of every action taken during the day
+ * 
+ * time and timeOffsetInMin - both represent the time in different formats
+ */
 public class ActionDetail implements Comparable<ActionDetail> {
 
 	private String time;

@@ -1,7 +1,10 @@
 package com.healthiq.takehome;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,9 +17,6 @@ import com.healthiq.takehome.bo.ImpactEntity;
 import com.healthiq.takehome.enums.ActionEnum;
 import com.healthiq.takehome.utils.Utils;
 
-// TODO replace System.out.println with log4j
-// TODO comment all classes
-
 public class BloodSugarSimulator {
 	
 	private static final int BASE_GLYCEMIC_INDEX = 80;
@@ -25,15 +25,18 @@ public class BloodSugarSimulator {
 	
 	private DaoService daoService = new DaoService();
 	
+	// load food and exercise data
 	private void loadData() throws FileNotFoundException {
 		daoService.loadData();
 	}
 	
+	// read line. replace multiple spaces with single space. trim.
 	private static String readNextLine(Scanner scanner) {
 		String line = scanner.nextLine();
 		return line.replaceAll(" +", " ").trim();
 	}
 	
+	// utility method to add action to list of actions at the minute. if no actions, create a new list at the minute and add to the list
 	private static void addActionAtOffset(List<ActionDetail>[] actionsByMin, int time, ActionDetail action) {
 		List<ActionDetail> actions = actionsByMin[time];
 		if (actions == null) {
@@ -43,7 +46,18 @@ public class BloodSugarSimulator {
 		actions.add(action);
 	}
 
-	public double[] generateGraphPoints(List<ActionDetail> actionDetails) {
+	/*
+	 * Main logic.
+	 * For each minute of the day (denoted by the index of the array of 1440 elements),
+	 * 	- maintain a list of actions that affect the glycemic index
+	 * 		- this is calculated by adding the action to every minute where its effect is felt i.e from startTime+1 + 1 or 2 hours
+	 * 
+	 * For every minute, taking previous minute as base, calculate the effect of every action.
+	 * 	- if no actions affect the minute, normalize
+	 *  - also calculate the glycation in this loop
+	 */
+	public double[] generateGraphPoints(List<ActionDetail> actionDetails) throws IOException {
+		// this data structure contains actions affecting the minute 
 		List<ActionDetail>[] actionsByMin = new List[MINUTES_IN_PERIOD];
 
 		double[] glycemicIndexByMin = new double[MINUTES_IN_PERIOD];
@@ -88,17 +102,21 @@ public class BloodSugarSimulator {
 		}
 		
 		int printStartTime = 0;
-		if (actionDetails.size() > 0) {
-			printStartTime = actionDetails.get(0).getTimeOffsetInMin();
+		int printEndTime = MINUTES_IN_PERIOD;
+//		if (actionDetails.size() > 0) {
+//			printStartTime = actionDetails.get(0).getTimeOffsetInMin();
+//			printEndTime = printStartTime + 360;
+//		}
+		BufferedWriter bw = new BufferedWriter(new FileWriter("output/output.dat", false));
+		for (int i = printStartTime; i < printEndTime; i++) {
+			bw.append(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexByMin[i]+ "\t" + glycationByMin[i] + "\n");
 		}
-		for (int i = printStartTime; i < printStartTime + 600; i++) {
-			System.out.println(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexByMin[i]+ "\t" + glycationByMin[i]);
-		}
-
+		bw.flush();
+		bw.close();
 		return glycemicIndexByMin;
 	}
 	
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws IOException {
 		BloodSugarSimulator bss = new BloodSugarSimulator();
 		bss.loadData();
 		
@@ -107,8 +125,9 @@ public class BloodSugarSimulator {
 		Scanner scanner = new Scanner(new File("input/input1.dat"));
 		String line = readNextLine(scanner);
 		
+		int lineNo = 0;
 		while (!"end".equalsIgnoreCase(line)) {
-			System.out.println("line=" + line + ".");
+			lineNo++;
 			if (StringUtils.isEmpty(line)) {
 				line = readNextLine(scanner);
 				continue;
@@ -118,7 +137,7 @@ public class BloodSugarSimulator {
 			String[] actionDetailInput = line.split(" ");
 			if (actionDetailInput.length < 3) { // other columns for comments for testing
 				isInputValid = false;
-				System.out.println("10. invalid input. length < 3"); // TODO better msg
+				System.out.println(lineNo + ": " + line + ". ignoring line. invalid input. length < 3");
 			}
 			
 			String time = null;
@@ -131,13 +150,13 @@ public class BloodSugarSimulator {
 			}
 
 			if (!isInputValid) {
-				System.out.println("invalid time = " + actionDetailInput[0]); // TODO better msg
+				System.out.println(lineNo + ": " + line + ". ignoring line. invalid time = " + actionDetailInput[0]);
 			}
 			else {
 				action = ActionEnum.getEnum(actionDetailInput[1]);
 				if (action == null) {
 					isInputValid = false;
-					System.out.println("invalid action=" + actionDetailInput[1]); // TODO better msg
+					System.out.println(lineNo + ": " + line + ". ignoring line. invalid action=" + actionDetailInput[1]);
 				}
 			}
 
@@ -150,12 +169,13 @@ public class BloodSugarSimulator {
 				}
 				if (e == null) {
 					isInputValid = false;
-					System.out.println("invalid food/exercise"); // TODO better msg
+					System.out.println(lineNo + ": " + line + ". ignoring line. invalid action");
 				}
 			}
 
 			if (isInputValid) {
 				actionDetails.add(new ActionDetail(time, action, e));
+				System.out.println(lineNo + ": " + line + ". valid");
 			}
 			line = readNextLine(scanner);
 		}

@@ -8,7 +8,9 @@ import java.util.Scanner;
 
 import com.healthiq.takehome.bo.ImpactEntity;
 
-
+/*
+ * Parent class for reading data from File data source
+ */
 public abstract class AbstractFileDao<E extends ImpactEntity> implements FileDao<E> {
 	
 	Map<Integer, E> entities = new HashMap<Integer, E>();
@@ -16,7 +18,6 @@ public abstract class AbstractFileDao<E extends ImpactEntity> implements FileDao
 	abstract E populateEntity(String line);
 
 	public void loadFile(String path) throws FileNotFoundException {
-		// TODO change this for BufferedFileReader
 		Scanner scanner = new Scanner(new File(path));
 		scanner.nextLine(); // header. ignore
 		
