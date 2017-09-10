@@ -5,7 +5,7 @@ import java.util.Map;
 
 public enum ActionEnum {
 
-	EAT ("E", 120, 1),
+	EAT ("F", 120, 1),
 	EXERCISE ("X", 60, -1),
 	;
 	

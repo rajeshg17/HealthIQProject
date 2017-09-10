@@ -1,8 +1,7 @@
 package com.healthiq.takehome.bo;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.healthiq.takehome.enums.ActionEnum;
+import com.healthiq.takehome.utils.Utils;
 
 public class ActionDetail implements Comparable<ActionDetail> {
 
@@ -33,9 +32,7 @@ public class ActionDetail implements Comparable<ActionDetail> {
 	
 	public void setTimeOffsetInMin(int timeOffsetInMin) {
 		this.timeOffsetInMin = timeOffsetInMin;
-		int hh = timeOffsetInMin / 60;
-		int mi = timeOffsetInMin % 60;
-		this.time = StringUtils.leftPad(Integer.toString(hh), 2, '0') + ":" + StringUtils.leftPad(Integer.toString(mi), 2, '0');
+		this.time = Utils.getTimeFromOffset(timeOffsetInMin);
 	}
 	public int getTimeOffsetInMin() {
 		return timeOffsetInMin;

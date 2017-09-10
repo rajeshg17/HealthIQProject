@@ -4,4 +4,6 @@ public interface ImpactEntity {
 	
 	Integer getId();
 	
+	double getGlycemicIndexChangeRate();
+	
 }

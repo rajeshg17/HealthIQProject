@@ -1,18 +1,21 @@
 package com.healthiq.takehome.bo;
 
+import com.healthiq.takehome.enums.ActionEnum;
+
 public class Exercise implements ImpactEntity {
 	
+	private ActionEnum ae = ActionEnum.EXERCISE;
+
 	private Integer id;
 	private String name;
 	private Integer exerciseIndex;
-	
-	public Exercise() {
-	}
+	private double glycemicIndexChangeRate;
 	
 	public Exercise(Integer id, String name, Integer exerciseIndex) {
 		this.id = id;
 		this.name = name;
 		this.exerciseIndex = exerciseIndex;
+		glycemicIndexChangeRate = (double)exerciseIndex * ae.getImpact() / ae.getAffectMin();
 	}
 
 	public Integer getId() {
@@ -37,11 +40,16 @@ public class Exercise implements ImpactEntity {
 	}
 
 	@Override
+	public double getGlycemicIndexChangeRate() {
+		return glycemicIndexChangeRate;
+	}
+	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Exercise [id=").append(id)
 				.append(", name=").append(name)
 				.append(", exerciseIndex=").append(exerciseIndex)
+				.append(", glycemicIndexChangeRate=").append(glycemicIndexChangeRate)
 				.append("]");
 		return builder.toString();
 	}
