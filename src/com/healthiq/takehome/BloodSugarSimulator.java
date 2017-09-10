@@ -3,7 +3,6 @@ package com.healthiq.takehome;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -34,92 +33,78 @@ public class BloodSugarSimulator {
 		String line = scanner.nextLine();
 		return line.replaceAll(" +", " ").trim();
 	}
+	
+	private static void addActionAtOffset(List<ActionDetail>[] actionsByMin, int time, ActionDetail action) {
+		List<ActionDetail> actions = actionsByMin[time];
+		if (actions == null) {
+			actions = new LinkedList<ActionDetail>();
+			actionsByMin[time] = actions;
+		}
+		actions.add(action);
+	}
 
 	public double[] generateGraphPoints(List<ActionDetail> actionDetails) {
-		double[] glycemicIndexAtOffset = new double[MINUTES_IN_PERIOD];
-		// ArrayList<List<ActionDetail>> actionsImpactingAtOffset = new ArrayList<List<ActionDetail>>(MINUTES_IN_PERIOD);
-		
-		for (int i = 0; i < MINUTES_IN_PERIOD; i++) {
-			glycemicIndexAtOffset[i] = BASE_GLYCEMIC_INDEX;
-		}
-		
-		Collections.sort(actionDetails);
-		
-		ActionDetail prevEatAction = null;
-		ActionDetail prevExerciseAction = null;
-		for (ActionDetail currentAction : actionDetails) {
-			normalize(prevEatAction, prevExerciseAction, currentAction, glycemicIndexAtOffset);
-			int startTime = currentAction.getTimeOffsetInMin();
-			for (int i = 1; i <= currentAction.getAction().getAffectMin(); i++) {
-				if (glycemicIndexAtOffset[startTime+i] == BASE_GLYCEMIC_INDEX) {
-					glycemicIndexAtOffset[startTime+i] = glycemicIndexAtOffset[startTime] + (i * currentAction.getEntity().getGlycemicIndexChangeRate());
-				}
-				else {
-					glycemicIndexAtOffset[startTime+i] = glycemicIndexAtOffset[startTime+i] + (i * currentAction.getEntity().getGlycemicIndexChangeRate());
-				}
-			}
-			if (currentAction.getAction() == ActionEnum.EAT) {
-				prevEatAction = currentAction;
-			}
-			if (currentAction.getAction() == ActionEnum.EXERCISE) {
-				prevExerciseAction = currentAction;
-			}
-		}
-		normalize(prevEatAction, prevExerciseAction, null, glycemicIndexAtOffset);
+		List<ActionDetail>[] actionsByMin = new List[MINUTES_IN_PERIOD];
 
+		double[] glycemicIndexByMin = new double[MINUTES_IN_PERIOD];
+		double[] glycationByMin = new double[MINUTES_IN_PERIOD];
+		int glycation = 0;
+		
+		for (ActionDetail action : actionDetails) {
+			int startTime = action.getTimeOffsetInMin();
+			for (int i = 1; i <= action.getAction().getAffectMin(); i++) {
+				addActionAtOffset(actionsByMin, startTime+i, action);
+			}
+		}
+		
+		glycemicIndexByMin[0] = BASE_GLYCEMIC_INDEX;
+		glycationByMin[0] = 0;
+
+		for (int time = 1; time < MINUTES_IN_PERIOD; time++ ) {
+			double glycemicIndex = glycemicIndexByMin[time-1];
+			
+			List<ActionDetail> actions = actionsByMin[time];
+			
+			// if no actions affect, normalize
+			if (actions == null || actions.isEmpty()) {
+				if (glycemicIndex > BASE_GLYCEMIC_INDEX) {
+					glycemicIndex = Math.max(glycemicIndex - NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE, 80); // if prevGlycemicIndex = 80.5, it should go to 80, not 79.5
+				}
+				else if (glycemicIndex < BASE_GLYCEMIC_INDEX) {
+					glycemicIndex = Math.min(glycemicIndex + NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE, 80); // if prevGlycemicIndex = 79.5, it should go to 80, not 80.5
+				}
+			}
+			else {
+				for (ActionDetail action : actions) {
+					glycemicIndex = glycemicIndex + action.getEntity().getGlycemicIndexChangeRate();
+				}
+			}
+			glycemicIndexByMin[time] = glycemicIndex;
+			if (glycemicIndex > 150) {
+				glycation++;
+			}
+			glycationByMin[time] = glycation;
+			
+		}
+		
 		int printStartTime = 0;
 		if (actionDetails.size() > 0) {
 			printStartTime = actionDetails.get(0).getTimeOffsetInMin();
 		}
-		for (int i = printStartTime; i < printStartTime + 360; i++) {
-			System.out.println(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexAtOffset[i]);
+		for (int i = printStartTime; i < printStartTime + 600; i++) {
+			System.out.println(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexByMin[i]+ "\t" + glycationByMin[i]);
 		}
-		
-		return glycemicIndexAtOffset;
+
+		return glycemicIndexByMin;
 	}
 	
-	private void normalize(ActionDetail prevEatAction, ActionDetail prevExerciseAction, ActionDetail currentAction, double[] timeGlycemicIndex) {
-		// array was initialized with BASE_GLYCEMIC_INDEX. no actions means glycemicIndex will be maintained at 80
-		if (prevEatAction == null && prevExerciseAction == null) {
-			return;
-		}
-		
-		int normalizationStartTime = 0;
-		if (prevEatAction == null && prevExerciseAction != null) {
-			normalizationStartTime = prevExerciseAction.getTimeOffsetInMin() + prevExerciseAction.getAction().getAffectMin();
-		}
-		else if (prevEatAction != null && prevExerciseAction == null) {
-			normalizationStartTime = prevEatAction.getTimeOffsetInMin() + prevEatAction.getAction().getAffectMin();
-		}
-		else if (prevEatAction != null && prevExerciseAction != null) {
-			 normalizationStartTime = Math.max(prevEatAction.getTimeOffsetInMin() + prevEatAction.getAction().getAffectMin(),
-					  prevExerciseAction.getTimeOffsetInMin() + prevExerciseAction.getAction().getAffectMin());
-		}
-		
-		int normalizationEndTime = MINUTES_IN_PERIOD - 1;
-		if (currentAction != null) {
-			normalizationEndTime = currentAction.getTimeOffsetInMin();
-		}
-		
-		if (normalizationStartTime < normalizationEndTime) {
-			for (int i = normalizationStartTime+1; i <= normalizationEndTime; i++) {
-				if (timeGlycemicIndex[i-1] > BASE_GLYCEMIC_INDEX) {
-					timeGlycemicIndex[i] = timeGlycemicIndex[i-1] - NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE;
-				}
-				else if (timeGlycemicIndex[i-1] < BASE_GLYCEMIC_INDEX) {
-					timeGlycemicIndex[i] = timeGlycemicIndex[i-1] + NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE;
-				}
-			}
-		}
-	}
-
 	public static void main(String[] args) throws FileNotFoundException {
 		BloodSugarSimulator bss = new BloodSugarSimulator();
 		bss.loadData();
 		
 		List<ActionDetail> actionDetails = new ArrayList<ActionDetail>();
 		System.out.println("Type \"END\" to end data input");
-		Scanner scanner = new Scanner(new File("input/input3.dat"));
+		Scanner scanner = new Scanner(new File("input/input1.dat"));
 		String line = readNextLine(scanner);
 		
 		while (!"end".equalsIgnoreCase(line)) {
