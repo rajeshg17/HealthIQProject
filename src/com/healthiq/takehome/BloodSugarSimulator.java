@@ -177,7 +177,7 @@ public class BloodSugarSimulator {
 		BloodSugarSimulator bss = new BloodSugarSimulator();
 		
 		bss.loadData();
-		List<ActionDetail> actionDetails = bss.readInput("input3.dat");
+		List<ActionDetail> actionDetails = bss.readInput("input.dat");
 		
 		Map<String, double[]> chartData = bss.calculateIndexesByMin(actionDetails);
 		double[] glycemicIndexByMin = chartData.get("Glycemic Index");

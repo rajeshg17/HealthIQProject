@@ -1,0 +1,16 @@
+Language: Java
+Additional libraris are included in lib folder. Sorry no pom.xml for this exercise.
+
+Input is read as a file in "input" folder. File name should be input.dat. (This can be changed to an input argument).
+
+Input format: File should be tab delimited. There are 3 columns in every file
+1. Column-1 = Time in HH:MI format. Time should be entered in 24 hour format. If time in 7:03 AM, enter as 07:03, Enter 11:50PM as 23:50. Day starts at 00:00 and ends at 23:59
+2. Column-2 = Action. Valid values. F or X for Food or eXercise.
+3. Column-3 = Id. Id column from the input file. It would has been easier if there was pick list to display the name and send the index.
+
+If any of the about values in a line are incorrect, the line will be ignored from the calculations. Errors are displayed for invalid lines.
+
+Output is written to output/output.dat (for manual verification) and a chart is generated the data.
+
+The y-axis labels are appending 16:00:00... Not sure what this is. Need to debug more. Did not work on UI before.
+
