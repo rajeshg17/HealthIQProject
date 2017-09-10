@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +58,7 @@ public class BloodSugarSimulator {
 	 * 	- if no actions affect the minute, normalize
 	 *  - also calculate the glycation in this loop
 	 */
-	public double[] generateGraphPoints(List<ActionDetail> actionDetails) throws IOException {
+	private Map<String, double[]> calculateIndexesByMin(List<ActionDetail> actionDetails) throws IOException {
 		// this data structure contains actions affecting the minute 
 		List<ActionDetail>[] actionsByMin = new List[MINUTES_IN_PERIOD];
 
@@ -98,31 +100,18 @@ public class BloodSugarSimulator {
 				glycation++;
 			}
 			glycationByMin[time] = glycation;
-			
 		}
 		
-		int printStartTime = 0;
-		int printEndTime = MINUTES_IN_PERIOD;
-//		if (actionDetails.size() > 0) {
-//			printStartTime = actionDetails.get(0).getTimeOffsetInMin();
-//			printEndTime = printStartTime + 360;
-//		}
-		BufferedWriter bw = new BufferedWriter(new FileWriter("output/output.dat", false));
-		for (int i = printStartTime; i < printEndTime; i++) {
-			bw.append(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexByMin[i]+ "\t" + glycationByMin[i] + "\n");
-		}
-		bw.flush();
-		bw.close();
-		return glycemicIndexByMin;
+		Map<String, double[]> chartData = new HashMap<String, double[]>();
+		chartData.put("Glycemic Index", glycemicIndexByMin);
+		chartData.put("Glycation", glycationByMin);
+		return chartData;
 	}
 	
-	public static void main(String[] args) throws IOException {
-		BloodSugarSimulator bss = new BloodSugarSimulator();
-		bss.loadData();
-		
+	private List<ActionDetail> readInput(String fileName) throws IOException {
 		List<ActionDetail> actionDetails = new ArrayList<ActionDetail>();
 		System.out.println("Type \"END\" to end data input");
-		Scanner scanner = new Scanner(new File("input/input1.dat"));
+		Scanner scanner = new Scanner(new File("input/" + fileName));
 		String line = readNextLine(scanner);
 		
 		int lineNo = 0;
@@ -162,10 +151,10 @@ public class BloodSugarSimulator {
 
 			if (isInputValid) {
 				if (action == ActionEnum.EAT) {
-					e = bss.daoService.getFoodDao().getEntity(Integer.parseInt(actionDetailInput[2]));
+					e = daoService.getFoodDao().getEntity(Integer.parseInt(actionDetailInput[2]));
 				}
 				else {
-					e = bss.daoService.getExerciseDao().getEntity(Integer.parseInt(actionDetailInput[2]));
+					e = daoService.getExerciseDao().getEntity(Integer.parseInt(actionDetailInput[2]));
 				}
 				if (e == null) {
 					isInputValid = false;
@@ -179,10 +168,35 @@ public class BloodSugarSimulator {
 			}
 			line = readNextLine(scanner);
 		}
-		System.out.println("Thank You for being Health Conscious!");
-		
-		bss.generateGraphPoints(actionDetails);
 		scanner.close();
+		System.out.println("Thank You for being Health Conscious!");
+		return actionDetails;
+	}
+
+	public static void main(String[] args) throws IOException {
+		BloodSugarSimulator bss = new BloodSugarSimulator();
+		
+		bss.loadData();
+		List<ActionDetail> actionDetails = bss.readInput("input3.dat");
+		
+		Map<String, double[]> chartData = bss.calculateIndexesByMin(actionDetails);
+		double[] glycemicIndexByMin = chartData.get("Glycemic Index");
+		double[] glycationByMin = chartData.get("Glycation");
+		
+		int printStartTime = 0;
+		int printEndTime = MINUTES_IN_PERIOD;
+		// if (actionDetails.size() > 0) {
+		//		printStartTime = actionDetails.get(0).getTimeOffsetInMin();
+		//		printEndTime = printStartTime + 360;
+		//	}
+		BufferedWriter bw = new BufferedWriter(new FileWriter("output/output.dat", false));
+		for (int i = printStartTime; i < printEndTime; i++) {
+			bw.append(Utils.getTimeFromOffset(i) + "\t" + glycemicIndexByMin[i]+ "\t" + glycationByMin[i] + "\n");
+		}
+		bw.flush();
+		bw.close();
+		
+		new TimeSeriesChart(glycemicIndexByMin, glycationByMin);
 	}
 
 }

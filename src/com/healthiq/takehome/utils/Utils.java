@@ -39,5 +39,5 @@ public class Utils {
 		int mi = offsetInMin % 60;
 		return StringUtils.leftPad(Integer.toString(hh), 2, '0') + ":" + StringUtils.leftPad(Integer.toString(mi), 2, '0');
 	}
-
+	
 }

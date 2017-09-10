@@ -10,8 +10,8 @@ import com.healthiq.takehome.dao.FoodDaoImpl;
 public class DaoService {
 	
 	// this is typically done through Spring
-	private static final FoodDao foodDao = new FoodDaoImpl();
-	private static final ExerciseDao exerciseDao = new ExerciseDaoImpl();
+	private FoodDao foodDao = new FoodDaoImpl();
+	private ExerciseDao exerciseDao = new ExerciseDaoImpl();
 	
 	public void loadData() throws FileNotFoundException {
 		foodDao.loadFile("data/food.dat");
