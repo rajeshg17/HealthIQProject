@@ -1,5 +1,5 @@
 Language: Java
-Additional libraris are included in lib folder. Sorry no pom.xml for this exercise.
+Additional libraries are included in lib folder. Sorry no pom.xml for this exercise.
 
 Input is read as a file in "input" folder. File name should be input.dat. (This can be changed to an input argument).
 
@@ -9,6 +9,8 @@ Input format: File should be tab delimited. There are 3 columns in every file
 3. Column-3 = Id. Id column from the input file. It would has been easier if there was pick list to display the name and send the index.
 
 If any of the about values in a line are incorrect, the line will be ignored from the calculations. Errors are displayed for invalid lines.
+
+Last line of input should be "END"
 
 Output is written to output/output.dat (for manual verification) and a chart is generated the data.
 

@@ -7,7 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -37,39 +36,24 @@ public class BloodSugarSimulator {
 		String line = scanner.nextLine();
 		return line.replaceAll(" +", " ").trim();
 	}
-	
-	// utility method to add action to list of actions at the minute. if no actions, create a new list at the minute and add to the list
-	private static void addActionAtOffset(List<ActionDetail>[] actionsByMin, int time, ActionDetail action) {
-		List<ActionDetail> actions = actionsByMin[time];
-		if (actions == null) {
-			actions = new LinkedList<ActionDetail>();
-			actionsByMin[time] = actions;
-		}
-		actions.add(action);
-	}
 
 	/*
 	 * Main logic.
-	 * For each minute of the day (denoted by the index of the array of 1440 elements),
-	 * 	- maintain a list of actions that affect the glycemic index
-	 * 		- this is calculated by adding the action to every minute where its effect is felt i.e from startTime+1 + 1 or 2 hours
+	 * For every action, add the change rate for every minute of the period impacted the action.
+	 * 	At the end of processing all the action, the aggregate change will be stored for every minute
 	 * 
-	 * For every minute, taking previous minute as base, calculate the effect of every action.
+	 * For every minute, taking previous minute as base, add the aggregated change rate.
 	 * 	- if no actions affect the minute, normalize
 	 *  - also calculate the glycation in this loop
 	 */
 	private Map<String, double[]> calculateIndexesByMin(List<ActionDetail> actionDetails) throws IOException {
-		// this data structure contains actions affecting the minute 
-		List<ActionDetail>[] actionsByMin = new List[MINUTES_IN_PERIOD];
-
 		double[] glycemicIndexByMin = new double[MINUTES_IN_PERIOD];
 		double[] glycationByMin = new double[MINUTES_IN_PERIOD];
 		int glycation = 0;
 		
 		for (ActionDetail action : actionDetails) {
-			int startTime = action.getTimeOffsetInMin();
 			for (int i = 1; i <= action.getAction().getAffectMin(); i++) {
-				addActionAtOffset(actionsByMin, startTime+i, action);
+				glycemicIndexByMin[i] += action.getEntity().getGlycemicIndexChangeRate();
 			}
 		}
 		
@@ -78,21 +62,17 @@ public class BloodSugarSimulator {
 
 		for (int time = 1; time < MINUTES_IN_PERIOD; time++ ) {
 			double glycemicIndex = glycemicIndexByMin[time-1];
+			double glycemicIndexChange = glycemicIndexByMin[time];
 			
-			List<ActionDetail> actions = actionsByMin[time];
-			
-			// if no actions affect, normalize
-			if (actions == null || actions.isEmpty()) {
+			if (glycemicIndexChange != 0) {
+				glycemicIndex = glycemicIndex + glycemicIndexChange;
+			}
+			else { // if no actions affect, normalize
 				if (glycemicIndex > BASE_GLYCEMIC_INDEX) {
 					glycemicIndex = Math.max(glycemicIndex - NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE, 80); // if prevGlycemicIndex = 80.5, it should go to 80, not 79.5
 				}
 				else if (glycemicIndex < BASE_GLYCEMIC_INDEX) {
 					glycemicIndex = Math.min(glycemicIndex + NO_ACTION_GLYCEMIC_INDEX_CHANGE_RATE, 80); // if prevGlycemicIndex = 79.5, it should go to 80, not 80.5
-				}
-			}
-			else {
-				for (ActionDetail action : actions) {
-					glycemicIndex = glycemicIndex + action.getEntity().getGlycemicIndexChangeRate();
 				}
 			}
 			glycemicIndexByMin[time] = glycemicIndex;
